@@ -26,10 +26,7 @@
 <p>科大镜像源：<a href="https://mirrors.ustc.edu.cn/proxmox/" target="_blank" rel="noopener">点击这里</a></p>
 <p>官网地址较慢，可以选择其他两个镜像源下载<br><img src="https://i.loli.net/2020/06/28/sFmBqhRXHiJf3Vu.png" alt="pve官网下载地址截图.png"></p>
 <h2 id="制作启动U盘"><a href="#制作启动U盘" class="headerlink" title="制作启动U盘"></a>制作启动U盘</h2><p>下载Rufus：<a href="http://rufus.ie/" target="_blank" rel="noopener">点击直达</a></p>
-<img src="https://i.loli.net/2020/06/28/GPWf4KJa57lFz9s.png" align="left">
-
-
-
+<p><img src="https://i.loli.net/2020/06/28/GPWf4KJa57lFz9s.png" alt="rufus界面.png"></p>
 <p>Boot selection选择下载的proxmox ve的ISO镜像文件，Device选择自己的U盘，点击开始</p>
 <p>制作完成后插到服务器启动，需提在服务器的BISO开启<strong>Inter-VT的虚拟化</strong>功能</p>
 <h2 id="安装proxmox-ve-1"><a href="#安装proxmox-ve-1" class="headerlink" title="安装proxmox ve"></a>安装proxmox ve</h2><p>启动服务器，启动项选择U盘启动，即可进入下面界面</p>
