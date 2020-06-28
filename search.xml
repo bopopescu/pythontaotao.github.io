@@ -2,8 +2,9 @@
 <search>
   <entry>
     <title>Hello World</title>
-    <url>/2020/06/27/hello-world/</url>
+    <url>/2020/06/28/hello-world/</url>
     <content><![CDATA[<p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
+<a id="more"></a>
 <h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
 
 <p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
@@ -21,6 +22,8 @@
     <title>proxmox（pve）安装Win10系统虚拟机</title>
     <url>/2020/06/26/proxmox-pve-%E5%AE%89%E8%A3%85Win10%E7%B3%BB%E7%BB%9F/</url>
     <content><![CDATA[<h2 id="安装proxmox-ve"><a href="#安装proxmox-ve" class="headerlink" title="安装proxmox ve"></a>安装proxmox ve</h2><p>Proxmox VE是一个完整的企业虚拟化开源平台。借助内置的Web界面，您可以轻松管理虚拟机和容器，软件定义的存储和网络，高可用性集群以及单个解决方案上的多个现成工具。</p>
+<a id="more"></a>
+
 <p>官网地址：<a href="https://www.proxmox.com/en/downloads" target="_blank" rel="noopener">点击这里</a></p>
 <p>中文社区：<a href="http://download.proxmox.wiki/iso/" target="_blank" rel="noopener">点击这里</a></p>
 <p>科大镜像源：<a href="https://mirrors.ustc.edu.cn/proxmox/" target="_blank" rel="noopener">点击这里</a></p>
