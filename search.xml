@@ -1,6 +1,218 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>kubernetes基础概念入门</title>
+    <url>/2020/06/29/kubernetes%E5%9F%BA%E7%A1%80%E6%A6%82%E5%BF%B5%E5%85%A5%E9%97%A8/</url>
+    <content><![CDATA[<p>Kubernetes (K8s) is an open-source system for automating deployment, scaling, and management of containerized applications.</p>
+<p>k8s是一个开源的云操作系统，能够用来自动化部署，扩缩容和管理我们的容器应用，简单来说，就是提供了容器编排和管理功能的系统</p>
+<a id="more"></a>
+
+<h1 id="架构图"><a href="#架构图" class="headerlink" title="架构图"></a>架构图</h1><p><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly9pLmxvbGkubmV0LzIwMjAvMDYvMzAvSHRUR0U5TllLYjZja3kyLnBuZw?x-oss-process=image/format,png" alt="u_325710987,885711381_fm_26_gp_0.jpg"></p>
+<p><strong>Master：</strong></p>
+<ul>
+<li>ApiServer：提供了资源操作的唯一入口，并提供认证、授权、访问控制、API注册和发现等机制；</li>
+<li>Scheduler：负责资源的调度，按照预定的调度策略将Pod调度到相应的机器上；</li>
+<li>Controller-Manager：负责维护集群的状态，比如故障检测、自动扩展、滚动更新等；</li>
+<li>ETCD：保存了整个集群的所有信息；</li>
+</ul>
+<p><strong>node：</strong></p>
+<ul>
+<li>Kubelet ：负责维护容器的生命周期，同时也负责Volume（CVI）和网络（CNI）的管理；</li>
+<li>docker：负责镜像管理以及Pod和容器的真正运行（CRI）；</li>
+<li>kubeproxy：负责为Service提供cluster内部的服务发现和负载均衡；</li>
+</ul>
+<p><strong>核心附件：</strong></p>
+<ul>
+<li>CoreDNS：负责为整个集群提供DNS服务</li>
+<li>Dashboard：提供一个简单的GUI界面来查看集群信息和操作集群</li>
+<li>Ingress：为服务提供外网入口，提供域名访问服务功能</li>
+<li>Flannel：为集群之间提供网络连接服务，分配pod和serviceIP功能</li>
+</ul>
+<h1 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a><strong>基本概念</strong></h1><ol>
+<li><p><strong>容器</strong>：一种轻量级、可移植、自包含的软件打包技术</p>
+</li>
+<li><p><strong>Master</strong>：为用户可和服暴露API，以最优方式调度工作负载，编排其他组件</p>
+</li>
+<li><p><strong>Pod</strong>: k8s最小调度单位，封装了一个或者多个容器的资源对象，Pod内所有容器共享命名空间和存储资源，类比<u><strong>豌豆荚</strong></u>  </p>
+</li>
+<li><p><strong>资源标签</strong>：一个键值型（key/value）数据，辨别pod的属性，或者帮助Scheduler来进行调度</p>
+</li>
+<li><p><strong>标签选择器</strong>： Lable Selector，根据标签过滤符合条件的资源对象</p>
+</li>
+<li><p><strong>namespace</strong>：资源对象的隔离，Service、Deployment、Pod</p>
+</li>
+<li><p><strong>Volume</strong>：存储卷，独立于容器文件系统的存储空间，为容器提供持久存储能力</p>
+</li>
+<li><p><strong>Pod控制器</strong>：用户不会直接部署管理pod，借助另一个抽象的工具【控制器(control) 】进行管理，保证副本数量达到预期</p>
+</li>
+</ol>
+<p>以下是Control的类型和功能列表</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>功能</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ReplicationController</td>
+<td>保证Pod的副本数达到预期</td>
+<td>几乎废弃</td>
+</tr>
+<tr>
+<td>ReplicaSet</td>
+<td>新一代RC，支持基于集合的标签选择器</td>
+<td>新一代控制器</td>
+</tr>
+<tr>
+<td>Deployment</td>
+<td>是最常用的管理无状态的pod，构建于RS之上</td>
+<td>支持基于集合（ set-based ）的标签选择器，以及它的滚动更新（ Rolling-Update ）机制,区别于RS的地方</td>
+</tr>
+<tr>
+<td>StatefulSet</td>
+<td>有状态的持久化应用，如database，为每个Pod创建独特标识，确保Pod间顺序性</td>
+<td></td>
+</tr>
+<tr>
+<td>DaemonSet</td>
+<td>用于确保每个节点都运行某Pod的一个副本，新增节点也会被添加此类Pod,用于运行集群存储守护进程，如ceph和glusterd,日志收集进程fluentd、logstash以及监控进程，prometheus的Node Exporter等</td>
+<td></td>
+</tr>
+<tr>
+<td>Job</td>
+<td>运行完成后可终止的应用，如批处理作业任务</td>
+<td></td>
+</tr>
+</tbody></table>
+<ol start="9">
+<li><strong>命名空间</strong></li>
+</ol>
+<p>作用：资源配额的隔离：CPU、Memory</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">kubectl get namespace</span><br><span class="line">NAME              STATUS   AGE</span><br><span class="line">default           Active   28d</span><br><span class="line">kube-public       Active   28d</span><br><span class="line">kube-system       Active   28d</span><br></pre></td></tr></table></figure>
+
+<p>创建一个命名空间</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> cat namesapce-dev.yaml </span></span><br><span class="line">apiVersion: v1 </span><br><span class="line">kind: Namespace </span><br><span class="line">metadata:  </span><br><span class="line">  name: dev </span><br><span class="line"></span><br><span class="line"><span class="meta">$</span><span class="bash"> kubectl create -f namesapce-dev.yaml</span></span><br></pre></td></tr></table></figure>
+
+<p>简单命令创建</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">kubectl create ns dev</span><br><span class="line"></span><br><span class="line">kubectl get all -n kube-system    #查看一个命名空间下所有的内容</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意：不同命名空间下SvcIP、PodIP是可以访问的,是对名字的隔离    </p>
+</blockquote>
+<h2 id="k8s服务、网络、存储概念"><a href="#k8s服务、网络、存储概念" class="headerlink" title="k8s服务、网络、存储概念"></a>k8s服务、网络、存储概念</h2><h3 id="Service概念"><a href="#Service概念" class="headerlink" title="Service概念"></a><strong>Service概念</strong></h3><p>​    Service 是建立在一组Pod 对象之上的资源抽象，它通过标签选择器选定一组Pod 对象，并为这组Pod 对象定义一个统一的固定访问入口（通常是一个IP 地址），若K8s 集群存在DNS 附件，它就会在Service 创建时为其自动配置一个DNS 名称以便客户端进行服务发现。到达Service IP 的请求将被负载均衡至其后的端点一一各个Pod 对象之上，Service从本质上来讲是一个<strong>四层</strong>代理服务。另外，Service 还可以将集群外部流量引入到集群中来。</p>
+<h3 id="Service类型"><a href="#Service类型" class="headerlink" title="Service类型"></a><strong>Service类型</strong></h3><ul>
+<li><p><strong>第一种</strong>是仅用于集群内部通信的ClusterIP类型；</p>
+</li>
+<li><p><strong>第二种</strong>是接入集群外部请求的NodePort 类型它工作于每个节点的主机IP 之上；</p>
+</li>
+<li><p><strong>第三种</strong>是LoadBalancer 类型，可以把外部请求负载均衡至多个Node 的主机IP 的NodePort 之上</p>
+<p>此三种类型中，每一种都以其前一种为基础才能实现，而且第三种类型中的LoadBalancer 需要协同集群外部的组件才能实现，此外部组件并不接受Kubemetes的管理。</p>
+</li>
+<li><p><strong>第四种</strong>是ExternalName,通过将Service映射由ExternalName字段的内容指定的主机名来暴露服务</p>
+</li>
+</ul>
+<blockquote>
+<p> Service IP 是一种虚拟IP ，也称为Cluster IP ，它专用于集群内通信，通常使用专用的地址段，如“ 10.96.0.0/12 ”网络     PodIP常用: 10.244.0.0/16</p>
+<p>Ingress：Pod和service都只能在集群内部通信，Ingress可以实现HTTPS（七层）负载均衡，实现和集群外部通信，本身是一组路由规则的集合，其控制器主要使用<strong>Nginx</strong>，或者haproxy</p>
+<p>HostPort和NodePort的区别：NodetPort是通过所有节点暴露容器服务，而HostPort由Pod对象所在的节点IP地址来暴露</p>
+</blockquote>
+<h3 id="k8s集群的网络"><a href="#k8s集群的网络" class="headerlink" title="k8s集群的网络"></a>k8s集群的网络</h3><p><strong>目的：</strong></p>
+<p>所有Pod之间不需要经过NAT直接通信，都在一个扁平的网络空间内</p>
+<p>所有集群内节点可不经过NAT机制直接和所有容器进行通信</p>
+<p><strong>分类：</strong>          </p>
+<ol>
+<li><p>各主机自身的网络，地址配置于主机网络接口，配置于k8s集群构建之前，不能由k8s管理</p>
+</li>
+<li><p>k8s集群专用于pod资源对象的虚拟网络，配置在Pod的容器接口上，为Pod设定IP和网络，借助于CNI插件实现，可部署k8s集群之外或者托管在集群上，需要在构建集群有管理员定义</p>
+</li>
+<li><p>专用于service资源对象的虚拟网络，不配置在任何主机或者容器的网络接口，通过node的kube-proxy配置为iptables或者ipvs规则，网络在集群创建时指定</p>
+</li>
+</ol>
+<h3 id="Kubernetes-资源对象"><a href="#Kubernetes-资源对象" class="headerlink" title="Kubernetes 资源对象"></a>Kubernetes 资源对象</h3><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>工作负载( Workload ）</strong></td>
+<td>通常称为pod 控制器，主要分为有状态、无状态</td>
+</tr>
+<tr>
+<td><strong>发现和负载均衡（ Discovery &amp; LB ）</strong></td>
+<td>Ingress（七层负载均衡）</td>
+</tr>
+<tr>
+<td><strong>配置和存储（ Config &amp; Storage ）</strong></td>
+<td>挂载外部存储卷</td>
+</tr>
+<tr>
+<td><strong>集群( Cluster ）资源</strong></td>
+<td>Node、Role、ClusterRole、RoleBinding、 ClusterRoleBinding</td>
+</tr>
+<tr>
+<td><strong>元数据（ Metadata ）</strong></td>
+<td>具有kind 、apiVersion 、metadata 、spec 和status 五个一级宇段</td>
+</tr>
+</tbody></table>
+<p>资源类型（ resource type ）是指在URL 中使用的名称，如Pod 、Namespace 和Service等，其URL 格式为“ GROUPNERSION度ESOURCE ”，如apps/v1/deployment 。</p>
+<ul>
+<li><p><em>apiVersion</em>  版本号，例如 v1</p>
+</li>
+<li><p><em>kind</em> 代表着资源对象所属的类 Pod/Deployment/Service/Namespace</p>
+</li>
+<li><p><em>metadata</em> 字段为资源提供元数据信息，如名称、隶属的名称空间和标签等；</p>
+</li>
+<li><p><em>spec</em> 则用于定义用户期望的状态，不同的资源类型，其状态的意义也各有不同</p>
+</li>
+<li><p><em>status</em> 则记录着活动对象的当前状态信息，它由Kubemetes 系统自行维护，对用户来说为只读字段</p>
+</li>
+</ul>
+<blockquote>
+<p>如果是YAML 格式的清单文件，多个资源彼此之间要使用—</p>
+<p>单独的一行进行资源分割，这样，多个资源就将以清单文件中定义的次序被create 、apply等子命令调用</p>
+<p>kubectl api-versions 查看现有api的版本</p>
+</blockquote>
+<h2 id="kubectl常用命令"><a href="#kubectl常用命令" class="headerlink" title="kubectl常用命令"></a><strong>kubectl常用命令</strong></h2><h3 id="kubectl-的命令分类："><a href="#kubectl-的命令分类：" class="headerlink" title="kubectl 的命令分类："></a>kubectl 的命令分类：</h3><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>命令</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>陈述式命令</strong>（ imperative command ）</td>
+<td>run , expose 、delete 和get 等命令</td>
+</tr>
+<tr>
+<td><strong>陈述式对象配置</strong>（ imperative object configuration ）</td>
+<td>create 、delete 、get 、describe和replace</td>
+</tr>
+<tr>
+<td><strong>声明式对象配置</strong>（ declarative object config uration )</td>
+<td>apply</td>
+</tr>
+</tbody></table>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly9pLmxvbGkubmV0LzIwMjAvMDYvMzAvRVJnM1lHajF1VVpURm5OLnBuZw?x-oss-process=image/format,png" alt="kubectl命令1.png"></p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly9pLmxvbGkubmV0LzIwMjAvMDYvMzAvMTl6NThyb0xiNGtVRjZnLnBuZw?x-oss-process=image/format,png" alt="kubectl命令2.png"></p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly9pLmxvbGkubmV0LzIwMjAvMDYvMzAvbHRqS29QNlJ3T2dXR2U3LnBuZw?x-oss-process=image/format,png" alt="kubectl命令3.png"></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">1、创建一个nginx的deployment</span><br><span class="line"><span class="meta">$</span><span class="bash"> kubectl run nginx-deploy --image=nginx:1.12 --port=80 --replicas=2</span></span><br><span class="line"></span><br><span class="line">2、对nginx-deploy进行扩缩容</span><br><span class="line"><span class="meta">$</span><span class="bash"> kubectl scale deploy/nginx-deploy --replicas=3</span></span><br><span class="line"></span><br><span class="line">3、对nginx-deploy进行服务端口暴露,通过Service的8080端口转发至容器的80端口上</span><br><span class="line"><span class="meta">$</span><span class="bash"> kubectl expose deployment nginx-deploy --port=8080 --target-port=80</span></span><br><span class="line"></span><br><span class="line">4、将nginx-deploy暴露为NortPort</span><br><span class="line"><span class="meta">$</span><span class="bash"> kubectl expose deployment nginx-deploy --<span class="built_in">type</span>=<span class="string">"NodePort"</span> --port=80 --name=my_nginx_web</span></span><br><span class="line"></span><br><span class="line">5、打印容器日志</span><br><span class="line"><span class="meta">$</span><span class="bash"> kubectl logs coredns-7b47bbb54c-q6dkr -n kube-system -f</span></span><br><span class="line">.:53</span><br><span class="line">[INFO] plugin/reload: Running configuration MD5 = 1588bb3af386f386c40674040e2b3399</span><br><span class="line">   ______                ____  _   _______</span><br><span class="line">  / ____/___  ________  / __ \/ | / / ___/      ~ CoreDNS-1.6.3</span><br><span class="line"> / /   / __ \/ ___/ _ \/ / / /  |/ /\__ \       ~ linux/amd64, go1.12.9, 37b9550</span><br><span class="line">/ /___/ /_/ / /  /  __/ /_/ / /|  /___/ /</span><br><span class="line">\____/\____/_/   \___/_____/_/ |_//____/</span><br><span class="line"></span><br><span class="line">-f 用于持续监控指定容器中的日志输出,类似于tail -f</span><br><span class="line"></span><br><span class="line">6、进入容器执行命令</span><br><span class="line">格式: kubectl exec -it &lt;Pod-name&gt; /bin/bash  </span><br><span class="line"><span class="meta">#</span><span class="bash">进入容器，如果一个pod里面有多个容器加 -c &lt;container name&gt; 指定容器</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> kubectl <span class="built_in">exec</span> -it nginx-deploy-64c7978669-2x5xz -n kube-system /bin/bash</span></span><br><span class="line"></span><br><span class="line">7、删除某个命名空间所有pod</span><br><span class="line"><span class="meta">$</span><span class="bash"> kubectl delete pods --all -n kube-public</span></span><br><span class="line"></span><br><span class="line">8、查看版本</span><br><span class="line"><span class="meta">$</span><span class="bash"> kubectl version --short       <span class="comment">#查看版本，也可以使用kubectl get node查看</span></span></span><br><span class="line"></span><br><span class="line">Client Version: v1.15.0 </span><br><span class="line">Server Version: v1.15.0</span><br><span class="line"></span><br><span class="line">9、运行一个测试容器</span><br><span class="line"><span class="meta">$</span><span class="bash"> kubectl run client --image=busybox --restart=Never -it -- /bin/sh</span></span><br><span class="line"></span><br><span class="line">10、命令的测试运行，选项--dry-run</span><br><span class="line"><span class="meta">$</span><span class="bash"> kubectl run nginx-deploy --image=nginx:1.12 --port=80 --replicas=2 --dry-run</span></span><br><span class="line"></span><br><span class="line">11、给指定节点打标签</span><br><span class="line"><span class="meta">$</span><span class="bash"> kubectl label nodes master disktype=ssd</span></span><br></pre></td></tr></table></figure>
+
+
+
+]]></content>
+      <categories>
+        <category>kubernetes</category>
+      </categories>
+      <tags>
+        <tag>kubernetes</tag>
+        <tag>基础概念</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>github+hexo搭建个人博客</title>
     <url>/2020/06/28/github-hexo%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/</url>
     <content><![CDATA[<p>前言：搭建个人博客也是心血来潮，很久之前就看到别人的博客很清新、简约、大气、时尚又装逼，嘿嘿。。。就想着自己折腾一个，奈何当时技术能力有限，连github都玩不转，当然以失败告终，最近又头脑发热，遂百度了n多资料，又开始了填（bei）坑(nue）之旅，而且能找到的资料大多仅仅就是搭建起来，作为一个强迫症患者，肯定不能忍受没有优化过的样子，所以本着搭建一个完整的博客并记录优化过程，如果你喜欢我博客的样子，参考此教程一定能够搭建起来差不多的样子。</p>
