@@ -1,6 +1,204 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Springboot项目部署到k8s集群</title>
+    <url>/2020/07/03/Springboot%E9%A1%B9%E7%9B%AE%E9%83%A8%E7%BD%B2%E5%88%B0k8s%E9%9B%86%E7%BE%A4/</url>
+    <content><![CDATA[<p>Springboot项目部署到k8s集群</p>
+<p>简介：该项目是使用Springboot框架开发的简单的考勤签到系统，依赖MySql数据库记录数据，能够实现注册、登陆、签到、修改个人信息，查看签到记录等功能</p>
+<p>源码地址：<a href="https://github.com/pythonTaotao/kubernetes/tree/master/Project/HHUDBExam" target="_blank" rel="noopener">考勤签到Springboot项目</a></p>
+<a id="more"></a>
+
+<p>确定整个实现步骤</p>
+<p><img src="https://i.loli.net/2020/07/04/eMzmQkAi5Wtr96X.png" alt="Snipaste_2020-07-04_15-06-50.png"></p>
+<h2 id="将服务制作成基础镜像"><a href="#将服务制作成基础镜像" class="headerlink" title="将服务制作成基础镜像"></a>将服务制作成基础镜像</h2><p>1、该项目基于Java的Springboot框架开发，所以基础镜像使用 openjdk镜像</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker pull openjdk:8-jre-alpine</span><br></pre></td></tr></table></figure>
+
+<p>2、使用mvn将该项目打包成jar包，需提前在服务器配置好Java和maven的环境</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">mvn package</span><br></pre></td></tr></table></figure>
+<p><img src="https://i.loli.net/2020/07/04/OG5oJmiWcrI2uCR.png" alt="Snipaste_2020-07-04_15-12-16.png"></p>
+<p>在<code>target/</code>下会生成<code>hhu-dbexam-0.0.1-SNAPSHOT.jar</code>的文件，可以先在本地测试一下</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">java -jar hhu-dbexam-0.0.1-SNAPSHOT.jar</span><br></pre></td></tr></table></figure>
+<p><img src="https://i.loli.net/2020/07/04/O2YWvoFuxph7jSk.png" alt="Snipaste_2020-07-04_15-14-04.png"></p>
+<p>3、使用Dockerfile构建docker，推送到我们的阿里云镜像仓库</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> cat Dockerfile</span></span><br><span class="line">FROM openjdk:8-jre-alpine</span><br><span class="line">COPY target/hhu-dbexam-0.0.1-SNAPSHOT.jar /hhu-dbexam-0.0.1-SNAPSHOT.jar</span><br><span class="line">ENTRYPOINT ["java","-jar","/hhu-dbexam-0.0.1-SNAPSHOT.jar"]</span><br><span class="line"></span><br><span class="line"><span class="meta">$</span><span class="bash"> docker build -t springboot-web:v1 .</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="部署依赖服务MySQL"><a href="#部署依赖服务MySQL" class="headerlink" title="部署依赖服务MySQL"></a>部署依赖服务MySQL</h2><p>这里也是使用Pod进行部署，但未做数据持久化，下面是<code>mysql-rc.yaml</code>部署文件内容</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ReplicationController</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">mysql</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">1</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">mysql</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">mysql</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">mysql</span></span><br><span class="line">        <span class="attr">image:</span> <span class="string">hub.c.163.com/library/mysql</span></span><br><span class="line">        <span class="attr">ports:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">3306</span></span><br><span class="line">        <span class="attr">env:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">MYSQL_ROOT_PASSWORD</span></span><br><span class="line">          <span class="attr">value:</span> <span class="string">"123456"</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">msyql-service</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">port:</span> <span class="number">3306</span></span><br><span class="line">    <span class="attr">targetPort:</span> <span class="number">3306</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">mysql</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">NodePort</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>修改代码中链接信息，使其能够连接数据库，url也要对应进行修改</p>
+<p><img src="https://i.loli.net/2020/07/04/7GQeA1ICsHWJwdc.png" alt="Snipaste_2020-07-04_15-24-38.png"></p>
+<p>创建对应的数据库和表，添加数据库字段</p>
+<p> 学生信息表的设计如下：</p>
+<table>
+<thead>
+<tr>
+<th>列名</th>
+<th>数据类型</th>
+<th>长度</th>
+<th>主键</th>
+<th>是否非空</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>id</td>
+<td>int</td>
+<td>10</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>stuno</td>
+<td>int</td>
+<td>20</td>
+<td>no</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>name</td>
+<td>varchar</td>
+<td>30</td>
+<td>no</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>password</td>
+<td>varchar</td>
+<td>20</td>
+<td>no</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>classid</td>
+<td>varchar</td>
+<td>20</td>
+<td>no</td>
+<td>no</td>
+</tr>
+<tr>
+<td>email</td>
+<td>varchar</td>
+<td>20</td>
+<td>no</td>
+<td>no</td>
+</tr>
+<tr>
+<td>phone</td>
+<td>varchar</td>
+<td>30</td>
+<td>no</td>
+<td>no</td>
+</tr>
+</tbody></table>
+<p>学生信息表的字段格式说明如下：</p>
+<table>
+<thead>
+<tr>
+<th>序号</th>
+<th>学号</th>
+<th>姓名</th>
+<th>密码</th>
+<th>班级</th>
+<th>邮箱</th>
+<th>电话</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>01</td>
+<td>1706010302</td>
+<td>测试</td>
+<td>123556</td>
+<td>计算机六班</td>
+<td><a href="mailto:12321@qq.com">12321@qq.com</a></td>
+<td>1525252</td>
+</tr>
+</tbody></table>
+<p>考勤记录表的设计如下：</p>
+<table>
+<thead>
+<tr>
+<th>列名</th>
+<th>数据类型</th>
+<th>长度</th>
+<th>主键</th>
+<th>是否为空</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>id</td>
+<td>inr</td>
+<td>10</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>stuno</td>
+<td>varchar</td>
+<td>20</td>
+<td>no</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>name</td>
+<td>varchar</td>
+<td>30</td>
+<td>no</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>puch_intimr</td>
+<td>datetime</td>
+<td></td>
+<td>no</td>
+<td>yes</td>
+</tr>
+</tbody></table>
+<p> 考勤记录表的字段格式说明如下：</p>
+<table>
+<thead>
+<tr>
+<th>序号</th>
+<th>学号</th>
+<th>姓名</th>
+<th>签到时间</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>01</td>
+<td>1706010302</td>
+<td>测试</td>
+<td>2020-04-29  09:27:17</td>
+</tr>
+</tbody></table>
+<p>下面是数据库导出的<code>hhu_dbexam.sql</code>文件</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">Navicat MySQL Data Transfer</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">Source Server         : 10.139.8.42</span></span><br><span class="line"><span class="comment">Source Server Version : 50718</span></span><br><span class="line"><span class="comment">Source Host           : 10.139.8.42:31645</span></span><br><span class="line"><span class="comment">Source Database       : hhu_dbexam</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">Target Server Type    : MYSQL</span></span><br><span class="line"><span class="comment">Target Server Version : 50718</span></span><br><span class="line"><span class="comment">File Encoding         : 65001</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">Date: 2020-07-04 15:28:28</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">SET</span> FOREIGN_KEY_CHECKS=<span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- ----------------------------</span></span><br><span class="line"><span class="comment">-- Table structure for punch_in</span></span><br><span class="line"><span class="comment">-- ----------------------------</span></span><br><span class="line"><span class="keyword">DROP</span> <span class="keyword">TABLE</span> <span class="keyword">IF</span> <span class="keyword">EXISTS</span> <span class="string">`punch_in`</span>;</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`punch_in`</span> (</span><br><span class="line">  <span class="string">`id`</span> <span class="built_in">int</span>(<span class="number">10</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> AUTO_INCREMENT,</span><br><span class="line">  <span class="string">`stuno`</span> <span class="built_in">varchar</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`name`</span> <span class="built_in">varchar</span>(<span class="number">30</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`puch_intimr`</span> datetime <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">  PRIMARY <span class="keyword">KEY</span> (<span class="string">`id`</span>)</span><br><span class="line">) <span class="keyword">ENGINE</span>=<span class="keyword">InnoDB</span> <span class="keyword">DEFAULT</span> <span class="keyword">CHARSET</span>=utf8;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- ----------------------------</span></span><br><span class="line"><span class="comment">-- Records of punch_in</span></span><br><span class="line"><span class="comment">-- ----------------------------</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- ----------------------------</span></span><br><span class="line"><span class="comment">-- Table structure for student</span></span><br><span class="line"><span class="comment">-- ----------------------------</span></span><br><span class="line"><span class="keyword">DROP</span> <span class="keyword">TABLE</span> <span class="keyword">IF</span> <span class="keyword">EXISTS</span> <span class="string">`student`</span>;</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`student`</span> (</span><br><span class="line">  <span class="string">`id`</span> <span class="built_in">int</span>(<span class="number">10</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> AUTO_INCREMENT,</span><br><span class="line">  <span class="string">`stuno`</span> <span class="built_in">int</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`name`</span> <span class="built_in">varchar</span>(<span class="number">30</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`password`</span> <span class="built_in">varchar</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`classid`</span> <span class="built_in">varchar</span>(<span class="number">20</span>) <span class="keyword">DEFAULT</span> <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`email`</span> <span class="built_in">varchar</span>(<span class="number">20</span>) <span class="keyword">DEFAULT</span> <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`phone`</span> <span class="built_in">varchar</span>(<span class="number">30</span>) <span class="keyword">DEFAULT</span> <span class="literal">NULL</span>,</span><br><span class="line">  PRIMARY <span class="keyword">KEY</span> (<span class="string">`id`</span>)</span><br><span class="line">) <span class="keyword">ENGINE</span>=<span class="keyword">InnoDB</span> AUTO_INCREMENT=<span class="number">5</span> <span class="keyword">DEFAULT</span> <span class="keyword">CHARSET</span>=utf8;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- ----------------------------</span></span><br><span class="line"><span class="comment">-- Records of student</span></span><br><span class="line"><span class="comment">-- ----------------------------</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="string">`student`</span> <span class="keyword">VALUES</span> (<span class="string">'1'</span>, <span class="string">'176815'</span>, <span class="string">'张三'</span>, <span class="string">'123'</span>, <span class="string">'计算机1班'</span>, <span class="string">'9830666999@qq.com'</span>, <span class="string">'17688903055'</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="string">`student`</span> <span class="keyword">VALUES</span> (<span class="string">'2'</span>, <span class="string">'1111111'</span>, <span class="string">'李四'</span>, <span class="string">'123123'</span>, <span class="string">'1111'</span>, <span class="string">'11111@qq.com'</span>, <span class="string">'17688903066'</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="string">`student`</span> <span class="keyword">VALUES</span> (<span class="string">'3'</span>, <span class="string">'123456'</span>, <span class="string">'李四'</span>, <span class="string">'123'</span>, <span class="string">'计算机1班'</span>, <span class="string">'888888@qq.com'</span>, <span class="string">'15971488899'</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="string">`student`</span> <span class="keyword">VALUES</span> (<span class="string">'4'</span>, <span class="string">'111111'</span>, <span class="string">'王五'</span>, <span class="string">'123'</span>, <span class="string">'计算机2班'</span>, <span class="string">'1111@11.com'</span>, <span class="string">'18788899999'</span>);</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="制作k8s服务并调度"><a href="#制作k8s服务并调度" class="headerlink" title="制作k8s服务并调度"></a>制作k8s服务并调度</h2><p>这个项目我们需要使用web界面进行访问，我们使用deploment创建Pod，需要使用NodePort进行暴露或者Ingress域名访问服务</p>
+<p> 下面是<code>springboot-web.yaml</code>部署文件内容</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">springboot-web</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">springboot-web</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">1</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">springboot-web</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">springboot-web</span></span><br><span class="line">        <span class="attr">image:</span> <span class="string">registry.cn-hangzhou.aliyuncs.com/other_ns/springboot-web:v1</span></span><br><span class="line">        <span class="attr">ports:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">8080</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="comment">#service</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">springboot-web</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">port:</span> <span class="number">80</span></span><br><span class="line">    <span class="attr">protocol:</span> <span class="string">TCP</span></span><br><span class="line">    <span class="attr">targetPort:</span> <span class="number">8080</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">springboot-web</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">NodePort</span></span><br></pre></td></tr></table></figure>
+
+<p>部署上述文件后查看pod和service是否正常运行</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@vmlabmaster-dev HHUDBExam]# kubectl get po |grep springboot</span><br><span class="line">springboot-web-67f69d94f5-59wjh               1/1     Running   0          53s</span><br><span class="line">[root@vmlabmaster-dev HHUDBExam]# kubectl get svc | grep springboot-web</span><br><span class="line">springboot-web               NodePort    10.110.69.65     &lt;none&gt;        80:31706/TCP      59s</span><br></pre></td></tr></table></figure>
+
+<p>我们访问 <a href="http://ip:31706访问我们的服务">http://ip:31706访问我们的服务</a></p>
+<p><img src="https://i.loli.net/2020/07/04/ozrNU6ZfjB2QX4S.png" alt="Snipaste_2020-07-04_15-34-35.png"></p>
+<p>至此，我们一个Springboot项目就完成在k8s上面的部署，总结一下流程，先找到基础镜像，在搞定运行的文件，然后将文件打包到镜像里面，最后在k8s上确定调度策略，部署服务。</p>
+]]></content>
+      <categories>
+        <category>kubernetes</category>
+      </categories>
+      <tags>
+        <tag>springboot</tag>
+        <tag>容器化</tag>
+        <tag>k8s</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>kubeadm部署单master节点kubernetes集群</title>
     <url>/2020/06/30/kubeadm%E9%83%A8%E7%BD%B2%E5%8D%95master%E8%8A%82%E7%82%B9kubernetes%E9%9B%86%E7%BE%A4/</url>
     <content><![CDATA[<p>Kubeadm 是一个官方推荐部署kubernetes工具，降低了部署难度，提高效率它提供了 <code>kubeadm init</code> 以及 <code>kubeadm join</code> 这两个命令作为快速创建 kubernetes 集群的最佳实践。kubeadm 通过执行必要的操作来启动和运行一个最小可用的集群。它被故意设计为只关心启动集群，而不是准备节点环境的工作。同样的，诸如安装各种各样的可有可无的插件，也不再它的负责范围</p>
