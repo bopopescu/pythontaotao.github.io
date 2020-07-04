@@ -3,8 +3,7 @@
   <entry>
     <title>Springboot项目部署到k8s集群</title>
     <url>/2020/07/03/Springboot%E9%A1%B9%E7%9B%AE%E9%83%A8%E7%BD%B2%E5%88%B0k8s%E9%9B%86%E7%BE%A4/</url>
-    <content><![CDATA[<p>Springboot项目部署到k8s集群</p>
-<p>简介：该项目是使用Springboot框架开发的简单的考勤签到系统，依赖MySql数据库记录数据，能够实现注册、登陆、签到、修改个人信息，查看签到记录等功能</p>
+    <content><![CDATA[<p>简介：该项目是使用Springboot框架开发的简单的考勤签到系统，依赖MySql数据库记录数据，能够实现注册、登陆、签到、修改个人信息，查看签到记录等功能</p>
 <p>源码地址：<a href="https://github.com/pythonTaotao/kubernetes/tree/master/Project/HHUDBExam" target="_blank" rel="noopener">考勤签到Springboot项目</a></p>
 <a id="more"></a>
 
