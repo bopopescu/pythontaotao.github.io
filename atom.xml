@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://pythontaotao.github.io/"/>
-  <updated>2020-07-04T08:36:27.129Z</updated>
+  <updated>2020-07-05T03:27:55.803Z</updated>
   <id>https://pythontaotao.github.io/</id>
   
   <author>
@@ -15,6 +15,34 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>kubernetes部署dashboard v2.0.3</title>
+    <link href="https://pythontaotao.github.io/2020/07/04/kubernetes%E9%83%A8%E7%BD%B2dashboard-v2-0-3/"/>
+    <id>https://pythontaotao.github.io/2020/07/04/kubernetes%E9%83%A8%E7%BD%B2dashboard-v2-0-3/</id>
+    <published>2020-07-04T15:13:52.000Z</published>
+    <updated>2020-07-05T03:27:55.803Z</updated>
+    
+    <content type="html"><![CDATA[<p>kubernetes部署dashboard v2.0.3</p><p>前言：之前部署过dashboard v1.x的版本，后来dashboard升级了，按照之前的部署方式部署后，总是出现无法访问的现象，后面又去github找到最新版的dashboard 部署方式，特此记录</p><a id="more"></a><h2 id="官方方式部署"><a href="#官方方式部署" class="headerlink" title="官方方式部署"></a>官方方式部署</h2><p>官方地址：<a href="https://github.com/kubernetes/dashboard" target="_blank" rel="noopener">https://github.com/kubernetes/dashboard</a></p><blockquote><p>说明：官方项目是使用的ClusterIP方式暴露服务，不利于我们进行访问验证</p></blockquote><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.3/aio/deploy/recommended.yaml</span></span><br></pre></td></tr></table></figure><h2 id="优化后部署"><a href="#优化后部署" class="headerlink" title="优化后部署"></a>优化后部署</h2><p>我将此服务改为NodePort方式进行部署，方便后续进行测试，镜像地址也修改为阿里云仓库的地址</p><p>文件地址：<a href="https://github.com/pythonTaotao/kubernetes/tree/master/dashboard" target="_blank" rel="noopener">点击直达</a></p><h3 id="部署资源清单"><a href="#部署资源清单" class="headerlink" title="部署资源清单"></a>部署资源清单</h3><h3 id="Getting-a-Bearer-Token"><a href="#Getting-a-Bearer-Token" class="headerlink" title="Getting a Bearer Token"></a>Getting a Bearer Token</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl -n kubernetes-dashboard describe secret $(kubectl -n kubernetes-dashboard get secret | grep admin-user | awk '&#123;print $1&#125;')</span><br></pre></td></tr></table></figure><p><img src="https://i.loli.net/2020/07/05/GvgjHcYspS6afKx.png" alt="Snipaste_2020-07-05_11-18-00.png"></p><h3 id="查看服务端口"><a href="#查看服务端口" class="headerlink" title="查看服务端口"></a>查看服务端口</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[root@vmlabmaster-dev ~]# kubectl get svc -n kubernetes-dashboard</span><br><span class="line">NAME                        TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)         AGE</span><br><span class="line">dashboard-metrics-scraper   ClusterIP   10.100.164.29    &lt;none&gt;        8000/TCP        11h</span><br><span class="line">kubernetes-dashboard        NodePort    10.107.131.103   &lt;none&gt;        443:32136/TCP   11h</span><br></pre></td></tr></table></figure><h3 id="登陆验证"><a href="#登陆验证" class="headerlink" title="登陆验证"></a>登陆验证</h3><p><a href="https://IP:Port">https://IP:Port</a></p><p><img src="https://i.loli.net/2020/07/05/eqncJ2HbXDmBE4R.png" alt="Snipaste_2020-07-05_11-20-30.png"></p>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;kubernetes部署dashboard v2.0.3&lt;/p&gt;
+&lt;p&gt;前言：之前部署过dashboard v1.x的版本，后来dashboard升级了，按照之前的部署方式部署后，总是出现无法访问的现象，后面又去github找到最新版的dashboard 部署方式，特此记录&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="kubernetes" scheme="https://pythontaotao.github.io/categories/kubernetes/"/>
+    
+    
+      <category term="dashboard" scheme="https://pythontaotao.github.io/tags/dashboard/"/>
+    
+      <category term="UI" scheme="https://pythontaotao.github.io/tags/UI/"/>
+    
+      <category term="部署" scheme="https://pythontaotao.github.io/tags/%E9%83%A8%E7%BD%B2/"/>
+    
+  </entry>
   
   <entry>
     <title>Springboot项目部署到k8s集群</title>
