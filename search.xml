@@ -337,7 +337,8 @@
 
 <h2 id="三、安装其他附件组件"><a href="#三、安装其他附件组件" class="headerlink" title="三、安装其他附件组件"></a><strong>三、安装其他附件组件</strong></h2><h3 id="1、查看集群的版本"><a href="#1、查看集群的版本" class="headerlink" title="1、查看集群的版本"></a>1、查看集群的版本</h3><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> kubectl version --short </span></span><br><span class="line">Client Version: v1.14.3 </span><br><span class="line">Server Version: v1.14.3</span><br></pre></td></tr></table></figure>
 
-<h3 id="2、安装dashboard，使用UI界面管理集群"><a href="#2、安装dashboard，使用UI界面管理集群" class="headerlink" title="2、安装dashboard，使用UI界面管理集群"></a>2、安装dashboard，使用UI界面管理集群</h3><p>创建dashboard的yaml文件</p>
+<h3 id="2、安装dashboard，使用UI界面管理集n"><a href="#2、安装dashboard，使用UI界面管理集n" class="headerlink" title="2、安装dashboard，使用UI界面管理集n"></a>2、安装dashboard，使用UI界面管理集n</h3><h3 id="下面的方式已经废弃，请参考新版本部署方式"><a href="#下面的方式已经废弃，请参考新版本部署方式" class="headerlink" title="下面的方式已经废弃，请参考新版本部署方式"></a>下面的方式已经废弃，请参考新版本部署方式</h3><p><a href="[https://pythontaotao.github.io/2020/07/04/kubernetes%E9%83%A8%E7%BD%B2dashboard-v2-0-3/](https://pythontaotao.github.io/2020/07/04/kubernetes部署dashboard-v2-0-3/)">kubernetes部署dashboard v2.0.3</a></p>
+<p>创建dashboard的yaml文件</p>
 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> wget https://raw.githubusercontent.com/kubernetes/dashboard/v1.10.1/src/deploy/recommended/kubernetes-dashboard.yaml</span></span><br></pre></td></tr></table></figure>
 
 <p>修改部分配置文件内容</p>
