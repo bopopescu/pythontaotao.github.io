@@ -1,11 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>helm部署OpenVPN 4.2.3</title>
+    <url>/2020/07/06/helm%E9%83%A8%E7%BD%B2OpenPN-4-2-3/</url>
+    <content><![CDATA[<p><strong>简单介绍</strong>： </p>
+<p>VPN直译就是虚拟专用通道，是提供给企业之间或者个人与公司之间<a href="https://baike.baidu.com/item/安全数据传输/3166604" target="_blank" rel="noopener">安全数据传输</a>的隧道，OpenVPN无疑是Linux下开源VPN的先锋，提供了良好的性能和友好的用户GUI。 </p>
+<p>它大量使用了OpenSSL加密库中的SSLv3/TLSv1协议函数库。 </p>
+<p>目前OpenVPN能在Solaris、Linux、OpenBSD、FreeBSD、NetBSD、Mac OS X与Microsoft Windows以及Android和iOS上运行，并包含了许多安全性的功能。它并不是一个基于Web的VPN软件，也不与IPsec及其他VPN软件包兼容</p>
+<a id="more"></a>
+
+<p>官方仓库地址：<a href="https://hub.kubeapps.com/charts/stable/openvpn" target="_blank" rel="noopener">Kubeapps Hub</a></p>
+<p>客户端下载地址：<a href="http://www.openvpn.se/" target="_blank" rel="noopener">下载地址</a></p>
+<p>若该网址无法访问，可以到下面的链接进行下载</p>
+<p>百度网盘：<a href="https://pan.baidu.com/s/1SCNy-DZXOHzet3SyiNYCuQ" target="_blank" rel="noopener">点击直达</a>                          提取码：l0qv</p>
+<h2 id="确认集群helm安装正确"><a href="#确认集群helm安装正确" class="headerlink" title="确认集群helm安装正确"></a>确认集群helm安装正确</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@master-dev ~]# helm version</span><br><span class="line">version.BuildInfo&#123;Version:"v3.1.0", GitCommit:"b29d20baf09943e134c2fa5e1e1cab3bf93315fa", GitTreeState:"clean", GoVersion:"go1.13.7"&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="下载Chart包，修改values-yaml文件"><a href="#下载Chart包，修改values-yaml文件" class="headerlink" title="下载Chart包，修改values.yaml文件"></a>下载Chart包，修改<code>values.yaml</code>文件</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">helm repo add stable https://kubernetes-charts.storage.googleapis.com</span><br><span class="line">helm pull stable/openvpn</span><br></pre></td></tr></table></figure>
+
+<p><strong>注意</strong>：如果上述地址无法添加到仓库，可以到<a href="http://mirror.azure.cn/kubernetes/charts/" target="_blank" rel="noopener">微软chart仓库</a>进行下载</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">service:</span><br><span class="line">  type: NodePort      #这里我们没有使用loadBalancer</span><br><span class="line"></span><br><span class="line">openvpn:</span><br><span class="line">  OVPN_K8S_POD_NETWORK: "10.244.0.0"</span><br><span class="line"><span class="meta">  #</span><span class="bash"> Kubernetes pod network subnet (optional).</span></span><br><span class="line">  OVPN_K8S_POD_SUBNET: "255.255.255.0"                #这里改成对应的集群的pod地址</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">persistence:</span><br><span class="line">  enabled: true</span><br><span class="line">  storageClass: "nfs-client"     #修改成集群的storageClass名称</span><br><span class="line">  accessMode: ReadWriteOnce</span><br><span class="line">  size: 2M</span><br></pre></td></tr></table></figure>
+
+<h2 id="部署并进行验证"><a href="#部署并进行验证" class="headerlink" title="部署并进行验证"></a>部署并进行验证</h2><p>1、部署openvpn应用</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@master-dev helm-chart]# helm install my-openvpn openvpn/</span><br><span class="line">NAME: my-openvpn</span><br><span class="line">LAST DEPLOYED: Tue Jul  7 14:31:04 2020</span><br><span class="line">NAMESPACE: default</span><br><span class="line">STATUS: deployed</span><br><span class="line">REVISION: 1</span><br><span class="line">TEST SUITE: None</span><br><span class="line">NOTES:</span><br><span class="line">OpenVPN is now starting.</span><br><span class="line"></span><br><span class="line">Please be aware that certificate generation is variable and may take some time (minutes).</span><br><span class="line"></span><br><span class="line">Check pod status with the command:</span><br><span class="line"></span><br><span class="line">  POD_NAME=$(kubectl get pods --namespace "default" -l app=openvpn -o jsonpath='&#123; .items[0].metadata.name &#125;') &amp;&amp; kubectl --namespace "default" logs $POD_NAME --follow</span><br><span class="line"></span><br><span class="line">LoadBalancer ingress creation can take some time as well. Check service status with the command:</span><br><span class="line"></span><br><span class="line">  kubectl --namespace "default" get svc</span><br><span class="line"></span><br><span class="line">You set the service type to NodePort, port 32085 will be used on each node.</span><br><span class="line"></span><br><span class="line">Once the external IP is available and all the server certificates are generated create client key .ovpn files by pasting the following into a shell:</span><br><span class="line"></span><br><span class="line">  POD_NAME=$(kubectl get pods --namespace "default" -l "app=openvpn,release=my-openvpn" -o jsonpath='&#123; .items[0].metadata.name &#125;')</span><br><span class="line">  SERVICE_NAME=$(kubectl get svc --namespace "default" -l "app=openvpn,release=my-openvpn" -o jsonpath='&#123; .items[0].metadata.name &#125;')</span><br><span class="line">  SERVICE_IP=$(kubectl get svc --namespace "default" "$SERVICE_NAME" -o go-template='&#123;&#123; range $k, $v := (index .status.loadBalancer.ingress 0)&#125;&#125;&#123;&#123; $v &#125;&#125;&#123;&#123;end&#125;&#125;')</span><br><span class="line">  KEY_NAME=kubeVPN</span><br><span class="line">  kubectl --namespace "default" exec -it "$POD_NAME" /etc/openvpn/setup/newClientCert.sh "$KEY_NAME" "$SERVICE_IP"</span><br><span class="line">  kubectl --namespace "default" exec -it "$POD_NAME" cat "/etc/openvpn/certs/pki/$KEY_NAME.ovpn" &gt; "$KEY_NAME.ovpn"</span><br><span class="line"></span><br><span class="line">Revoking certificates works just as easy:</span><br><span class="line">  KEY_NAME=&lt;name&gt;</span><br><span class="line">  POD_NAME=$(kubectl get pods -n "default" -l "app=openvpn,release=my-openvpn" -o jsonpath='&#123;.items[0].metadata.name&#125;')</span><br><span class="line">  kubectl -n "default" exec -it "$POD_NAME" /etc/openvpn/setup/revokeClientCert.sh $KEY_NAME</span><br><span class="line"></span><br><span class="line">Copy the resulting $KEY_NAME.ovpn file to your open vpn client (ex: in tunnelblick, just double click on the file).  Do this for each user that needs to connect to the VPN.  Change KEY_NAME for each additional user.</span><br></pre></td></tr></table></figure>
+
+
+
+<p>下面整理一下生成clientkey的脚本,这里面的信息就是上面部署完成后输出的信息，需要修改参数<code>KEY_NAME</code>和<code>SERVICE_IP</code>,执行完成后会生成<code>wangwu.ovpn</code>的文件，客户端使用该文件作为连接凭证</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> cat get_clientkey.sh</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash">!/bin/bash</span></span><br><span class="line"></span><br><span class="line">POD_NAME=$(kubectl get pods --namespace "default" -l "app=openvpn,release=my-openvpn" -o jsonpath='&#123; .items[0].metadata.name &#125;')</span><br><span class="line">SERVICE_NAME=$(kubectl get svc --namespace "default" -l "app=openvpn,release=my-openvpn" -o jsonpath='&#123; .items[0].metadata.name &#125;')</span><br><span class="line">SERVICE_IP=10.169.68.142</span><br><span class="line">KEY_NAME=wangwu</span><br><span class="line">kubectl --namespace "default" exec -it "$POD_NAME" /etc/openvpn/setup/newClientCert.sh "$KEY_NAME" "$SERVICE_IP"</span><br><span class="line">kubectl --namespace "default" exec -it "$POD_NAME" cat "/etc/openvpn/certs/pki/$KEY_NAME.ovpn" &gt; "$KEY_NAME.ovpn"</span><br><span class="line"></span><br><span class="line"><span class="meta">$</span><span class="bash"> chmod +x get_clientkey.sh &amp;&amp; ./get_clientkey.sh</span></span><br></pre></td></tr></table></figure>
+
+<p>2、使用客户端验证</p>
+<p>将该文件放到OpenVPN安装的目录下，<code>OpenVPN\config</code>连接后能正确获取IP说明安装成功</p>
+<p><img src="https://i.loli.net/2020/07/07/osg2RKCTZyMh8Pw.png" alt="Snipaste_2020-07-07_14-55-37.png"></p>
+]]></content>
+      <categories>
+        <category>kubernetes</category>
+      </categories>
+      <tags>
+        <tag>helm</tag>
+        <tag>OpenVPN</tag>
+        <tag>容器</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>kubernetes安装MySql 5.7主从复制集群</title>
     <url>/2020/07/05/kubernetes%E5%AE%89%E8%A3%85MySql-5-7%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6%E9%9B%86%E7%BE%A4/</url>
     <content><![CDATA[<h1 id="部署原理"><a href="#部署原理" class="headerlink" title="部署原理"></a>部署原理</h1><p>使用 statefulset控制器部署mysql主从集群的原理如下图所示：</p>
+<p><img src="https://i.loli.net/2020/07/07/oCg3Vwx8PHvu1hB.png" alt="Snipaste_2020-07-06_21-35-04.png"></p>
 <p>官方地址： <a href="https://kubernetes.io/docs/tasks/run-application/run-replicated-stateful-application/?spm=a2c4e.10696291.0.0.1efb19a4ykprHR" target="_blank" rel="noopener">Run a Replicated Stateful</a></p>
-<p>参考博客：<a href="https://blog.csdn.net/qq_35887546/article/details/105957214" target="_blank" rel="noopener">CSDN博客</a></p>
+<p>参考博客：<a href="https://blog.csdn.net/qq_35887546/article/details/105957214" target="_blank" rel="noopener">CSDN博客</a> <a href="https://yq.aliyun.com/articles/646191" target="_blank" rel="noopener">阿里云博客</a></p>
 <a id="more"></a>
 
 
